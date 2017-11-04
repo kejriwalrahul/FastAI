@@ -10,7 +10,7 @@
 #define WIN_SIZE 8
 
 __device__
-int GPU_winning_patterns[WIN_SIZE][ROW_SIZE] = {
+int winning_patterns[WIN_SIZE][ROW_SIZE] = {
 	{0, 1, 2},
 	{3, 4, 5},
 	{6, 7, 8},
@@ -21,6 +21,7 @@ int GPU_winning_patterns[WIN_SIZE][ROW_SIZE] = {
 	{2, 4, 6},
 };
 
+/*
 int CPU_winning_patterns[WIN_SIZE][ROW_SIZE] = {
 	{0, 1, 2},
 	{3, 4, 5},
@@ -31,6 +32,7 @@ int CPU_winning_patterns[WIN_SIZE][ROW_SIZE] = {
 	{0, 4, 8},
 	{2, 4, 6},
 };
+*/
 
 class TicTacToeState {
 
@@ -55,13 +57,16 @@ class TicTacToeState {
 	/*
 		Pointer to CPU/GPU patterns
 	*/
-	int** winning_patterns; 
+	/*
+	int**& winning_patterns; 
+	*/
 
 public:
 
 	/*	
 		Initialize game state
 	*/
+	/*
 	__host__
 	TicTacToeState(){
 		for(int i=0; i<BOARD_SIZE; i++)
@@ -69,13 +74,14 @@ public:
 		turn = false;
 		winning_patterns = CPU_winning_patterns;
 	}
+	*/
 
 	__device__
 	TicTacToeState(){
 		for(int i=0; i<BOARD_SIZE; i++)
 			occupied[i] = false;
 		turn = false;
-		winning_patterns = GPU_winning_patterns;
+		// winning_patterns = GPU_winning_patterns;
 	}	
 
 	/*
