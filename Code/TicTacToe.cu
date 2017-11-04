@@ -110,7 +110,7 @@ public:
 		
 		Note: Does not check validity of move, assumes it is correct
 	*/
-	TicTacToeState* make_move(int *loc){
+	TicTacToeState* make_move(int loc){
 		TicTacToeState *new_state = new TicTacToeState(*this);
 		new_state->turn = !this->turn;
 		occupied[loc] = true; 
@@ -118,4 +118,4 @@ public:
 		return new_state;
 	}
 
-}
+};
