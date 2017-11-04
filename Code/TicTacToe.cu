@@ -9,7 +9,19 @@
 #define ROW_SIZE 3
 #define WIN_SIZE 8
 
-int winning_patterns[WIN_SIZE][ROW_SIZE] = {
+__device__
+int GPU_winning_patterns[WIN_SIZE][ROW_SIZE] = {
+	{0, 1, 2},
+	{3, 4, 5},
+	{6, 7, 8},
+	{0, 3, 6},
+	{1, 4, 7},
+	{2, 5, 8},
+	{0, 4, 8},
+	{2, 4, 6},
+};
+
+int CPU_winning_patterns[WIN_SIZE][ROW_SIZE] = {
 	{0, 1, 2},
 	{3, 4, 5},
 	{6, 7, 8},
@@ -40,16 +52,31 @@ class TicTacToeState {
 	*/
 	bool turn;
 
+	/*
+		Pointer to CPU/GPU patterns
+	*/
+	int** winning_patterns; 
+
 public:
 
 	/*	
 		Initialize game state
 	*/
+	__host__
 	TicTacToeState(){
 		for(int i=0; i<BOARD_SIZE; i++)
 			occupied[i] = false;
 		turn = false;
+		winning_patterns = CPU_winning_patterns;
 	}
+
+	__device__
+	TicTacToeState(){
+		for(int i=0; i<BOARD_SIZE; i++)
+			occupied[i] = false;
+		turn = false;
+		winning_patterns = GPU_winning_patterns;
+	}	
 
 	/*
 		Returns list of possible moves
@@ -57,6 +84,7 @@ public:
 		Returns:
 			bool[BOARD_SIZE] - ith element is true if that move is possible
 	*/
+	__host__ __device__		
 	bool* MoveGen(){
 		bool *moves = new bool[BOARD_SIZE];
 		for(int i=0; i<BOARD_SIZE; i++)
@@ -75,6 +103,7 @@ public:
 			Sets finished if game is over else finished is false
 			[Interpret return value only if game is over]
 	*/
+	__host__ __device__
 	int GoalCheck(bool &finished){
 		finished = false;
 		
@@ -110,6 +139,7 @@ public:
 		
 		Note: Does not check validity of move, assumes it is correct
 	*/
+	__host__ __device__
 	TicTacToeState* make_move(int loc){
 		TicTacToeState *new_state = new TicTacToeState(*this);
 		new_state->turn = !this->turn;
