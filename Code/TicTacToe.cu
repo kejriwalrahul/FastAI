@@ -4,13 +4,17 @@
 	Rahul Kejriwal
 	CS14B023
 */
-#include <stdio.h>
+#include <iostream>
 #include "TicTacToe.h"
+using namespace std;
+
 #define BOARD_SIZE 9
-#define ROW_SIZE 3
 #define WIN_SIZE 8
+#define ROW_SIZE 3
 #define NUM_ROWS 3
 #define NUM_COLS 3
+
+#define OFFSET(i,j) ((i)*NUM_COLS + (j))
 
 __device__
 int winning_patterns[WIN_SIZE][ROW_SIZE] = {
@@ -151,30 +155,19 @@ public:
 	*/
 	 __host__ __device__
 	TicTacToeState* make_move(int loc){
-		occupied[loc] = true; 
-		owner[loc] = this->turn;
 		TicTacToeState *new_state = new TicTacToeState(*this);
 		new_state->turn = !this->turn;		
+		new_state->occupied[loc] = true; 
+		new_state->owner[loc] = this->turn;
 		return new_state;
 	}
 	
 	__host__ __device__
 	void print_board(){
 		for(int i=0;i<NUM_ROWS;i++){
-			for(int j=0;j<NUM_ROWS;j++){
-				if(occupied[i*NUM_COLS+j]){
-					if(owner[i*NUM_COLS+j]){
-						printf("X ");
-					}
-					else{
-						printf("O ");
-					}
-				}
-				else{
-					printf("- ");
-				}
-			}
-			printf("\n");	
+			for(int j=0;j<NUM_ROWS;j++)
+				cout << occupied[OFFSET(i,j)]?(owner[OFFSET(i,j)]?"X ":"O "):"- "; 
+			cout << endl;	
 		}
 	}
 
