@@ -4,10 +4,12 @@
 	Rahul Kejriwal
 	CS14B023
 */
-
+#include <stdio.h>
 #define BOARD_SIZE 9
 #define ROW_SIZE 3
 #define WIN_SIZE 8
+#define NUM_ROWS 3
+#define NUM_COLS 3
 
 __device__
 int winning_patterns[WIN_SIZE][ROW_SIZE] = {
@@ -76,21 +78,22 @@ public:
 	}
 	*/
 
-	__device__
+	__host__ __device__
 	TicTacToeState(){
 		for(int i=0; i<BOARD_SIZE; i++)
 			occupied[i] = false;
 		turn = false;
 		// winning_patterns = GPU_winning_patterns;
-	}	
-
+	}
+	
+	
 	/*
 		Returns list of possible moves
 		
 		Returns:
 			bool[BOARD_SIZE] - ith element is true if that move is possible
 	*/
-	__host__ __device__		
+	 __host__ __device__		
 	bool* MoveGen(){
 		bool *moves = new bool[BOARD_SIZE];
 		for(int i=0; i<BOARD_SIZE; i++)
@@ -109,7 +112,7 @@ public:
 			Sets finished if game is over else finished is false
 			[Interpret return value only if game is over]
 	*/
-	__host__ __device__
+	__device__
 	int GoalCheck(bool &finished){
 		finished = false;
 		
@@ -145,13 +148,47 @@ public:
 		
 		Note: Does not check validity of move, assumes it is correct
 	*/
-	__host__ __device__
+	 __host__ __device__
 	TicTacToeState* make_move(int loc){
-		TicTacToeState *new_state = new TicTacToeState(*this);
-		new_state->turn = !this->turn;
 		occupied[loc] = true; 
 		owner[loc] = this->turn;
+		TicTacToeState *new_state = new TicTacToeState(*this);
+		new_state->turn = !this->turn;		
 		return new_state;
+	}
+	
+	__host__ __device__
+	void print_board(){
+		for(int i=0;i<NUM_ROWS;i++){
+			for(int j=0;j<NUM_ROWS;j++){
+				if(occupied[i*NUM_COLS+j]){
+					if(owner[i*NUM_COLS+j]){
+						printf("X ");
+					}
+					else{
+						printf("O ");
+					}
+				}
+				else{
+					printf("- ");
+				}
+			}
+			printf("\n");	
+		}
 	}
 
 };
+
+int main(){
+	TicTacToeState *ttcs = new TicTacToeState();
+	TicTacToeState *t1;
+	printf("Original board\n");
+	ttcs->print_board();
+	t1 = ttcs->make_move(3);
+	printf("First move\n");
+	ttcs->print_board();
+	printf("Second move\n");
+	t1->make_move(4);
+	t1->print_board();
+	return 0;
+}
