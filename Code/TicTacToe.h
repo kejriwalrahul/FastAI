@@ -1,11 +1,6 @@
- /*
-	Game Interface for Tic-Tac-Toe
+#ifndef _KERNELS_H_
+#define _KERNELS_H_
 
-	Rahul Kejriwal
-	CS14B023
-*/
-#include <stdio.h>
-#include "TicTacToe.h"
 #define BOARD_SIZE 9
 #define ROW_SIZE 3
 #define WIN_SIZE 8
@@ -179,3 +174,5 @@ public:
 	}
 
 };
+
+#endif
