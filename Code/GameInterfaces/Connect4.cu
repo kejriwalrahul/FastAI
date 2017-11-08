@@ -5,7 +5,8 @@
 	CS14B023
 */
 
-#include <iostream>
+#include <stdio.h>
+#include "GameState.cu"
 using namespace std;
 
 #define NUM_ROWS 6
@@ -14,7 +15,7 @@ using namespace std;
 
 #define OFFSET(i,j) ((i)*NUM_COLS + (j))
 
-class Connect4State {
+class Connect4State : public GameState {
 
 	/*
 		2 arrays for game board:  
@@ -39,7 +40,7 @@ class Connect4State {
 		If over, store winner
 	*/
 	bool isOver;
-	uint8_t winner;
+	int  winner;
 
 	/*
 		Store current heuristic evaluation of the game-state
@@ -56,7 +57,7 @@ public:
 	*/
 
 	__host__ __device__
-	TicTacToeState(){
+	Connect4State(){
 		turn   = false;
 		isOver = false;
 		winner = 0;
@@ -64,19 +65,18 @@ public:
 			occupied[i] = false;
 	}	
 
+
 	/*
-		Returns list of possible moves
-		
-		Returns:
-			bool[NUM_COLS] - ith element is true if that move is possible
+		Creates an array of possible moves in moves
 	*/
 	__host__ __device__		
-	bool* MoveGen(){
-		bool *moves = new bool[NUM_COLS];
+	void moveGen(){
+		moves_length = NUM_COLS;
+		moves = new bool[NUM_COLS];
 		for(int i=0; i<NUM_COLS; i++)
 			moves[i] = !occupied[OFFSET(NUM_ROWS-1, i)];
-		return moves;
 	}
+
 
 	/*
 		Check if game is over and who won
@@ -95,13 +95,23 @@ public:
 		return winner;
 	}
 
+
+	/*
+		Returns if the current game state is a terminal game tree node 
+	*/
+	__host__ __device__
+	bool isTerminal(){
+		return isOver;
+	}
+
+
 	/*
 		Creates new TicTacToeState by making move at loc
 		
 		Note: Does not check validity of move, assumes it is correct
 	*/
 	__host__ __device__
-	Connect4State* make_move(int loc){
+	Connect4State* makeMove(int loc){
 
 		// Create new board and modify turn
 		Connect4State *new_state = new Connect4State(*this);
@@ -129,11 +139,12 @@ public:
 		return new_state;
 	}
 
+
 	/*
 		Updates isOver and winner after a move
 	*/
 	__host__ __device__
-	void update_win(int r, int c){
+	void update_win(int row, int loc){
 		short l = 0, r = 0, t = 0, b = 0;
 		short tl = 0, tr = 0, bl = 0, br = 0; 
 		short dl = 1, dr = 1, dt = 1, db = 1;
@@ -195,25 +206,27 @@ public:
 		}
 	}
 
+
 	/*
 		Returns heuristic evaluation of the gamestate from p0 perspective
 	*/
 	__host__ __device__
-	int heuristic_eval(){
+	int heuristicEval(){
 		return p0_hval - p1_hval;
 	}
+
 
 	/*
 		Print GameState
 	*/
 	__host__ __device__
 	void printState(){
-		cout << "Next turn: " << turn?"P1":"P0";
+		printf("Next turn: %s\n", (turn?"P1":"P0")); 
 		for(int i=NUM_ROWS-1; i>=0; i--){
-			cout << "|";
+			printf("|");
 			for(int j=0; j<NUM_COLS; j++)
-				cout << occupied[OFFSET(i,j)]?(owner[OFFSET(i,j)]?"O":"X"):" " << "|";
-			cout << endl;
+				printf("%s%s", occupied[OFFSET(i,j)]?(owner[OFFSET(i,j)]?"O":"X"):" ", "|");
+			printf("\n");
 		}
 	}
 
