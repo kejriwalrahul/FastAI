@@ -7,7 +7,6 @@
 
 #include <stdio.h>
 #include "GameState.cu"
-using namespace std;
 
 #define NUM_ROWS 6
 #define NUM_COLS 7

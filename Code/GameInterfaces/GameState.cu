@@ -10,7 +10,7 @@
 */
 class GameState {
 
-protected:
+public:
 
 	/*
 		Array to hold moves from current GameState
@@ -19,7 +19,10 @@ protected:
 	bool *moves;
 	int moves_length;
 
-public:
+	/*
+		To store best known next move if computed
+	*/
+	int optimal_move;
 
 	/*
 		Evaluation function to be defined by concrete game interface
