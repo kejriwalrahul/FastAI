@@ -49,9 +49,10 @@ int recursiveAlphaBeta(GameState *g, int alpha, int beta, int depth, bool isMax)
 /*
 	Iterative Definition
 */
-int iterativeAlphaBeta(GameState *g, int alpha, int beta, int depth){
+int iterativeAlphaBeta(GameState *g, int alpha, int beta, int depth, int isMax){
 	
 	// TO DO ... 
+	
 
 	return 0;
 }

@@ -14,7 +14,7 @@ using namespace std;
 int main(){
 	GameState *g = new TicTacToeState;
 
-	cout << "Minimax value: " << recursiveAlphaBeta(g, INT_MIN, INT_MAX, 9, true);
+	cout << "Minimax value: " << recursiveAlphaBeta(g, INT_MIN, INT_MAX, 9, true) << endl;
 
 	return 0;
 }

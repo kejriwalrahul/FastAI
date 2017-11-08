@@ -14,6 +14,25 @@
 
 #define OFFSET(i,j) ((i)*NUM_COLS + (j))
 
+__device__
+int GPU_evaluationTable[NUM_ROWS][NUM_COLS] = {
+	{3, 4, 5, 7, 5, 4, 3}, 
+	{4, 6, 8, 10, 8, 6, 4},
+	{5, 8, 11, 13, 11, 8, 5}, 
+	{5, 8, 11, 13, 11, 8, 5},
+	{4, 6, 8, 10, 8, 6, 4},
+	{3, 4, 5, 7, 5, 4, 3}
+};
+
+int CPU_evaluationTable[NUM_ROWS][NUM_COLS] = {
+	{3, 4, 5, 7, 5, 4, 3}, 
+	{4, 6, 8, 10, 8, 6, 4},
+	{5, 8, 11, 13, 11, 8, 5}, 
+	{5, 8, 11, 13, 11, 8, 5},
+	{4, 6, 8, 10, 8, 6, 4},
+	{3, 4, 5, 7, 5, 4, 3}
+};
+
 class Connect4State : public GameState {
 
 	/*
@@ -62,6 +81,7 @@ public:
 		winner = 0;
 		for(int i=0; i<BOARD_SIZE; i++)		
 			occupied[i] = false;
+		p0_hval = p1_hval = 0;
 	}	
 
 
@@ -133,7 +153,21 @@ public:
 		// Check if current move gave a win to current player
 		new_state->update_win(row, loc);
 
-		// TO DO: Update heuristic values
+		// Update heuristic values
+		if(this->turn == false){
+			#ifdef  __CUDA_ARCH__
+			p0_hval += GPU_evaluationTable[row][loc];
+			#else
+			p0_hval += CPU_evaluationTable[row][loc];
+			#endif			
+		}
+		else{
+			#ifdef  __CUDA_ARCH__
+			p1_hval += GPU_evaluationTable[row][loc];
+			#else
+			p1_hval += CPU_evaluationTable[row][loc];
+			#endif			
+		}
 
 		return new_state;
 	}
