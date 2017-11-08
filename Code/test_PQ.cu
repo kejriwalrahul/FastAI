@@ -6,7 +6,9 @@ int main(){
 	PriorityQueue* pq = new PriorityQueue();
 	PriorityQueue* d_pq;
 	InsertTable* h_instab, *d_instab;
+	DeleteTable* h_deltab, *d_deltab;
 	h_instab = new InsertTable();
+	h_deltab = new DeleteTable();
 	/*InsertTable *instab;
 	cudaHostAlloc((void **)&instab,sizeof(InsertTable),0);
 	instab = new InsertTable();*/
@@ -14,6 +16,7 @@ int main(){
 	cudaMalloc((void **)&d_pq,sizeof(PriorityQueue));
 	cudaMemcpy(d_pq,pq,sizeof(PriorityQueue), cudaMemcpyHostToDevice);
 	cudaMalloc((void **)&d_instab,sizeof(InsertTable));
+	cudaMalloc((void **)&d_deltab,sizeof(DeleteTable));
 	cudaError_t err;
 	int vals[3];
 	int indices[1000];
@@ -22,7 +25,7 @@ int main(){
 	cudaMalloc(&d_indices,1000*sizeof(int));
 	for(int i=0;i<15;i++){
 		//cudaMemcpy(h_instab,d_instab,sizeof(InsertTable), cudaMemcpyDeviceToHost);
-		for(int j=0;j<10;j++){
+		for(int j=0;j<3;j++){
 			vals[j] = rand()%100;
 			printf("%d\n",vals[j]);
 		}
@@ -76,7 +79,41 @@ int main(){
 	pq->print_object();
 	
 	printf("HEllo %d\n",pq->curr_size);
-	
+	for(int j=0;j<3;j++){
+			vals[j] = j*100;
+			printf("%d\n",vals[j]);
+		}
+	pq->deleteUpdate(vals,3,0);
+	cudaMemcpy(d_pq,pq,sizeof(PriorityQueue), cudaMemcpyHostToDevice);
+	h_deltab->addEntry();
+	for(int i=0;i<2;i++){
+		cudaMemcpy(d_deltab,h_deltab,sizeof(DeleteTable), cudaMemcpyHostToDevice);
+		num_indices = 0;
+		for(int j=0;j<QSIZE;j++){
+			if(h_deltab->status[j]==1 && h_deltab->level[j]%2==0){
+				indices[num_indices++] = j;
+			}
+		}
+		cudaMemcpy(d_indices,indices,num_indices*sizeof(int),cudaMemcpyHostToDevice);
+		if(num_indices!=0)delete_update<<<1,num_indices>>>(d_pq,d_deltab,d_indices,num_indices);
+		cudaMemcpy(pq,d_pq,sizeof(PriorityQueue), cudaMemcpyDeviceToHost);
+		pq->print_object();
+		printf("########################\n");
+		cudaMemcpy(h_deltab,d_deltab,sizeof(DeleteTable), cudaMemcpyDeviceToHost);
+		num_indices = 0;
+		for(int j=0;j<QSIZE;j++){
+			if(h_deltab->status[j]==1 && h_deltab->level[j]%2==1){
+				indices[num_indices++] = j;
+			}
+		}
+		cudaMemcpy(d_indices,indices,num_indices*sizeof(int),cudaMemcpyHostToDevice);
+		if(num_indices!=0)delete_update<<<1,num_indices>>>(d_pq,d_deltab,d_indices,num_indices);
+		
+		cudaMemcpy(h_deltab,d_deltab,sizeof(DeleteTable), cudaMemcpyDeviceToHost);
+		cudaMemcpy(pq,d_pq,sizeof(PriorityQueue), cudaMemcpyDeviceToHost);
+		pq->print_object();
+		printf("########################\n");
+	}
 	
 	return 0;
 }

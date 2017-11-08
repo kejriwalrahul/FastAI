@@ -93,24 +93,35 @@ public:
 	
 	__host__ __device__
 	void writeToNode(int *arr, int size, int index){
-		int orig_size = nodes[index].size;
 		for(int i=0;i<size&&nodes[index].size<R;i++){
 			nodes[index].nodes[nodes[index].size].key = arr[i];
 			nodes[index].size++;
 		}
-		if(orig_size == 0){
+		
+		/*if(orig_size == 0){
 			curr_size++;
+		}*/
+	}
+	
+	__host__ __device__
+	void deleteUpdate(int *arr, int size, int index){
+		nodes[index].size = 0;
+		for(int i=0;i<size&&i<R;i++){
+			nodes[index].nodes[nodes[index].size].key = arr[i];
+			nodes[index].size++;
 		}
 	}
 	
 	__host__
 	void print_object() {
-		for(int i=0;i<curr_size;i++){
-			cout << "Node number " << i << endl;
-			for(int j=0;j<nodes[i].size;j++){
-				cout << nodes[i].nodes[j].key << " ";
+		for(int i=0;i<QSIZE;i++){
+			if(nodes[i].size>0){
+				cout << "Node number " << i << endl;
+				for(int j=0;j<nodes[i].size;j++){
+					cout << nodes[i].nodes[j].key << " ";
+				}
+				cout << endl;
 			}
-			cout << endl;
 		}
 		cout << "Printed object" << endl;
 	}
@@ -190,6 +201,43 @@ public:
 	}
 	
 
+};
+
+class DeleteTable{
+public:
+	int status[QSIZE];
+	int indices[QSIZE];
+	int level[QSIZE];
+	
+	__host__ __device__
+	DeleteTable(){
+		for(int i=0;i<QSIZE;i++){
+			status[i] = 0;
+		}
+	}
+	
+	__host__ __device__
+	void addEntry(){
+		int off = 0;
+		while(status[off]!=0){
+			off++;
+		}
+		status[off] = 1;
+		indices[off] = 0;
+		level[off] = 0;
+	}
+	
+	__host__ __device__
+	void printTable(){
+		int count = 0;
+		for(int i=0;i<QSIZE;i++){
+			if(status[i] == 1){
+				printf("Index: %d\n",indices[i]);
+			}
+		}
+		printf("Done XXXX %d\n\n",count);
+	}
+	
 };
 
 #endif
