@@ -77,7 +77,22 @@ public:
 			occupied[i] = false;
 		turn = false;
 	}
-	
+
+
+	/*
+		Copy Constructor
+	*/	
+	__host__ __device__
+	TicTacToeState(TicTacToeState &other){
+		isOver = other.isOver;
+		winner = other.winner;
+		turn   = other.turn;
+		moves_length = other.moves_length;
+
+		memcpy(owner, other.owner, BOARD_SIZE*sizeof(bool));
+		memcpy(occupied, other.occupied, BOARD_SIZE*sizeof(bool));
+	}
+
 	
 	/*
 		Populates moves of parent with possible moves		

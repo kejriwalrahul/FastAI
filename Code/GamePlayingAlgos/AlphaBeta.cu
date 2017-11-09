@@ -6,6 +6,7 @@
 */
 
 #include <climits>
+#include <stdio.h>
 
 /*
 	Recursive Definition
@@ -86,6 +87,7 @@ public:
 /*
 	Helper return routine for iterative AlphaBeta
 */
+__host__ __device__
 inline void returnHelper(AlphaBetaState*& state, int val, int& fin_val){
 	if(state->prev){
 		// Transmit curr node info
@@ -105,6 +107,7 @@ inline void returnHelper(AlphaBetaState*& state, int val, int& fin_val){
 /*
 	Iterative Definition
 */
+__host__ __device__
 int iterativeAlphaBeta(GameState *g, int alpha, int beta, int depth, int isMax){
 	
 	// Create root
@@ -169,4 +172,71 @@ int iterativeAlphaBeta(GameState *g, int alpha, int beta, int depth, int isMax){
 	}
 
 	return fin_val;
+}
+
+__global__ void kernel(GameState* g, int alpha, int beta, int depth, int isMax, int* res){
+
+	GameState *gpu_g = new TicTacToeState(*(TicTacToeState*)g);
+
+	// Create root
+	AlphaBetaState *state = new AlphaBetaState(gpu_g, alpha, beta, depth, isMax);
+	int fin_val = (isMax?INT_MIN:INT_MAX);
+
+	while(state){
+		/*
+			Phase 1 - Fresh Node discovered
+		*/
+		if(!(state->started_loop)){
+			if(state->depth == 0 || state->gs->isTerminal()){
+				returnHelper(state, state->gs->heuristicEval(), fin_val);
+				continue;
+			}
+
+			state->gs->moveGen();			
+			state->started_loop = true;
+		}
+
+		/*
+			Phase 2 - Update last return val (safe even for 1st time)
+				Revisiting current node
+		*/
+		if(state->isMax){
+			state->val = max(state->val, state->last_returned_val);
+			state->alpha = max(state->alpha, state->val);
+		}
+		else{
+			state->val = min(state->val, state->last_returned_val);
+			state->beta = min(state->beta, state->val);
+		}
+
+		if(state->beta <= state->alpha){
+			returnHelper(state, state->val, fin_val);
+			continue;
+		}
+
+		state->next_move++;
+
+		/*
+			Phase 3 - Generate next child and start it
+		*/
+
+		// Find next valid move
+		while(state->next_move < state->gs->moves_length && !(state->gs->moves[state->next_move]))
+			state->next_move++;
+
+		// If child found
+		if(state->next_move < state->gs->moves_length){
+			state->next = new AlphaBetaState(state->gs->makeMove(state->next_move), state->alpha, state->beta, state->depth-1, !(state->isMax));
+			state->next->prev = state;
+			state = state->next;
+			continue;
+		}
+		// Else no more children
+		else{
+			returnHelper(state, state->val, fin_val);
+			continue;
+		}
+	}
+
+	*res = fin_val;
 }
