@@ -65,6 +65,7 @@ class TicTacToeState : public GameState {
 	*/
 	bool isOver;
 	int  winner;
+	TicTacToeState *parent_node;
 
 public:
 
@@ -186,6 +187,14 @@ public:
 		new_state->turn = !this->turn;		
 		new_state->occupied[loc] = true; 
 		new_state->owner[loc] = this->turn;
+		new_state->parent_node = this;
+		int child_val = 0;
+		for(int i=0;i<=loc;i++){
+			if(this->occupied[i]==0){
+				child_val++;
+			}
+		}
+		new_state->child_num = child_val;
 		new_state->updateIfWinner();
 		return new_state;
 	}
@@ -201,6 +210,25 @@ public:
 				printf(occupied[OFFSET(i,j)]?(owner[OFFSET(i,j)]?"O ":"X "):"- "); 
 			printf("\n");
 		}
+	}
+	
+	/*
+		isLastChild for SSS*
+	*/
+	
+	__host__ __device__
+	bool isLastChild(){
+		int last_empty = BOARD_SIZE;
+		for(int i=BOARD_SIZE-1;i>=0;i--){
+			if((parent_node)->occupied[i]==0){
+				last_empty = i;
+				break;
+			}
+		}
+		if(last_empty == child_num){
+			return true;
+		}
+		return false;
 	}
 
 };
