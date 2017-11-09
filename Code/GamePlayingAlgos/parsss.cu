@@ -1,16 +1,18 @@
 #include <stdio.h>
-#include "TicTacToe.h"
+#include "../GameInterfaces/TicTacToe.cu"
+#include "../Includes/PriorityQueue.cu"
+#include "../Includes/pq_kernels.cu"
+#include <thrust/host_vector.h>
 
 int main(){
-	TicTacToeState *ttcs = new TicTacToeState();
-	TicTacToeState *t1;
-	printf("Original board\n");
-	ttcs->print_board();
-	t1 = ttcs->make_move(3);
-	printf("First move\n");
-	ttcs->print_board();
-	printf("Second move\n");
-	t1->make_move(4);
-	t1->print_board();
+	InsertTable *instab;
+	DeleteTable *deltab;
+	PriorityQueue *pq;
+	
+	cudaHostAlloc((void **)&pq,sizeof(PriorityQueue),0);
+	cudaHostAlloc((void **)&instab,sizeof(InsertTable),0);
+	cudaHostAlloc((void **)&deltab,sizeof(DeleteTable),0);
+	
+	
 	return 0;
 }

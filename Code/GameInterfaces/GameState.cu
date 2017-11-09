@@ -23,6 +23,8 @@ public:
 		To store best known next move if computed
 	*/
 	int optimal_move;
+	GameState *parent; // Stores the parent node.
+	int child_num; // Stores the child number of the parent which gives the current node.
 
 	/*
 		Evaluation function to be defined by concrete game interface
@@ -55,5 +57,14 @@ public:
 	*/	
 	__host__ __device__
 	virtual void printState() = 0;
+	
+	/*
+		Functions specific to SSS*
+		Added by Srinidhi Prabhu, CS14B028
+	*/
+	
+	__host__ __device__
+	virtual bool isLastChild() = 0;
+	
 	
 };

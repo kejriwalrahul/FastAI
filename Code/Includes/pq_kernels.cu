@@ -1,5 +1,3 @@
-#include <stdio.h>
-
 __global__ void print_val(PriorityQueue *pq)
 {
 	printf("%d %d\n",threadIdx.x,pq->getSize());
@@ -16,7 +14,7 @@ __global__ void insert(PriorityQueue *pq, InsertTable *table,int* offsets, int s
 			table->num_elements[offset] = 0;
 		}
 		else{
-			int arr[2*R];
+			int arr[2*NUM_PER_NODE];
 			int tot_size = 0;
 			int tmp;
 			for(int i=0;i<table->num_elements[offset];i++){
@@ -35,12 +33,12 @@ __global__ void insert(PriorityQueue *pq, InsertTable *table,int* offsets, int s
 					}
 				}
 			}
-			for(int i=0;i<R&&i<tot_size;i++){
+			for(int i=0;i<NUM_PER_NODE&&i<tot_size;i++){
 				pq->nodes[node_num].nodes[i].key = arr[i];
 			}
-			if(tot_size>R){
-				for(int i=R;i<tot_size;i++){
-					table->elements[offset][i-R] = arr[i];
+			if(tot_size>NUM_PER_NODE){
+				for(int i=NUM_PER_NODE;i<tot_size;i++){
+					table->elements[offset][i-NUM_PER_NODE] = arr[i];
 				}
 			}
 			// Change the entry so that it moves towards the target.
@@ -50,7 +48,7 @@ __global__ void insert(PriorityQueue *pq, InsertTable *table,int* offsets, int s
 			rem = table->target_bits[offset][level];
 			table->indices[offset] = (node_num)*2+1+rem;
 			table->level[offset] += 1;
-			table->num_elements[offset] = (tot_size>R)?tot_size-R:0;
+			table->num_elements[offset] = (tot_size>NUM_PER_NODE)?tot_size-NUM_PER_NODE:0;
 		}
 	}
 }
@@ -62,7 +60,7 @@ __global__ void delete_update(PriorityQueue *pq, DeleteTable *table, int* offset
 		int num_node = table->indices[offset];
 		int left = 2*num_node + 1;
 		int right = 2*num_node + 2;
-		int arr[3*R];
+		int arr[3*NUM_PER_NODE];
 		int tot_size = 0;
 		int done = 0;
 		int tmp;
@@ -103,7 +101,7 @@ __global__ void delete_update(PriorityQueue *pq, DeleteTable *table, int* offset
 						}
 					}
 				}
-				for(int i=0;i<R&&i<tot_size;i++){
+				for(int i=0;i<NUM_PER_NODE&&i<tot_size;i++){
 					pq->nodes[num_node].nodes[i].key = arr[i];
 				}
 				
@@ -120,11 +118,11 @@ __global__ void delete_update(PriorityQueue *pq, DeleteTable *table, int* offset
 					pq->nodes[right].nodes[i].key = arr[i];
 					printf("%d\n",pq->nodes[right].nodes[i].key);
 				}*/
-				pq->deleteUpdate(arr+R,R,left);
-				pq->deleteUpdate(arr+2*R,R,right);
-				pq->nodes[num_node].size = (tot_size < R)?tot_size:R;
-				pq->nodes[left].size = (tot_size < 2*R)?tot_size-R:R;
-				pq->nodes[right].size = (tot_size < 3*R)?tot_size-2*R:R;
+				pq->deleteUpdate(arr+NUM_PER_NODE,NUM_PER_NODE,left);
+				pq->deleteUpdate(arr+2*NUM_PER_NODE,NUM_PER_NODE,right);
+				pq->nodes[num_node].size = (tot_size < NUM_PER_NODE)?tot_size:NUM_PER_NODE;
+				pq->nodes[left].size = (tot_size < 2*NUM_PER_NODE)?tot_size-NUM_PER_NODE:NUM_PER_NODE;
+				pq->nodes[right].size = (tot_size < 3*NUM_PER_NODE)?tot_size-2*NUM_PER_NODE:NUM_PER_NODE;
 				table->indices[offset] = right;
 				table->level[offset] += 1;
 				

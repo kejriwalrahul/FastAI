@@ -1,9 +1,6 @@
-#define R 3
+#define NUM_PER_NODE 3
 #define QSIZE 1000
 #define NUM_BITS 10
-#include <iostream>
-#include <stdio.h>
-using namespace std;
 #ifndef _KERNELS_H_
 #define _KERNELS_H_
 
@@ -37,14 +34,14 @@ public:
 
 class PQNode{
 public:
-	Node nodes[R];
+	Node nodes[NUM_PER_NODE];
 	int level;
 	int size;
 	
 	
 	__host__ __device__
 	PQNode(Node *a, int len, int c){
-		int min = (len < R)?len:R;
+		int min = (len < NUM_PER_NODE)?len:NUM_PER_NODE;
 		for(int i=0;i<min;i++){
 			nodes[i] = a[i];
 		}
@@ -83,7 +80,7 @@ public:
 	int getInsertTarget(){
 		int ans = -1;
 		for(int i=0;i<QSIZE;i++){
-			if(sizes[i]!=R){
+			if(sizes[i]!=NUM_PER_NODE){
 				ans = i;
 				break;
 			}
@@ -93,20 +90,18 @@ public:
 	
 	__host__ __device__
 	void writeToNode(int *arr, int size, int index){
-		for(int i=0;i<size&&nodes[index].size<R;i++){
+		for(int i=0;i<size&&nodes[index].size<NUM_PER_NODE;i++){
 			nodes[index].nodes[nodes[index].size].key = arr[i];
 			nodes[index].size++;
 		}
 		
-		/*if(orig_size == 0){
-			curr_size++;
-		}*/
+		
 	}
 	
 	__host__ __device__
 	void deleteUpdate(int *arr, int size, int index){
 		nodes[index].size = 0;
-		for(int i=0;i<size&&i<R;i++){
+		for(int i=0;i<size&&i<NUM_PER_NODE;i++){
 			nodes[index].nodes[nodes[index].size].key = arr[i];
 			nodes[index].size++;
 		}
@@ -116,14 +111,14 @@ public:
 	void print_object() {
 		for(int i=0;i<QSIZE;i++){
 			if(nodes[i].size>0){
-				cout << "Node number " << i << endl;
+				printf("Node number %d\n",i);
 				for(int j=0;j<nodes[i].size;j++){
-					cout << nodes[i].nodes[j].key << " ";
+					printf("%d ",nodes[i].nodes[j].key);
 				}
-				cout << endl;
+				printf("\n");
 			}
 		}
-		cout << "Printed object" << endl;
+		printf("Printed object\n");
 	}
 	
 };
@@ -132,7 +127,7 @@ class InsertTable{
 public:
 	int status[QSIZE]; // Says whether the entry in the table is in use or not.
 	int indices[QSIZE]; // Index of the node in the priority queue on which the process should happen.
-	int elements[QSIZE][R]; // Set of elements to be inserted at the node.
+	int elements[QSIZE][NUM_PER_NODE]; // Set of elements to be inserted at the node.
 	int num_elements[QSIZE];
 	int level[QSIZE]; // Level number of the node on which the operation occurs.
 	int target[QSIZE]; // Target node to insert the set of elements.
@@ -155,7 +150,7 @@ public:
 		}
 		status[off] = 1;
 		indices[off] = index;
-		int min = (size < R)?size:R;
+		int min = (size < NUM_PER_NODE)?size:NUM_PER_NODE;
 		for(int i=0;i<min;i++){
 			elements[off][i] = elmts[i];
 			num_elements[off]++;

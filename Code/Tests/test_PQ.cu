@@ -1,5 +1,6 @@
-#include "PriorityQueue.h"
-#include "pq_kernels.h"
+#include <stdio.h>
+#include "../Includes/PriorityQueue.cu"
+#include "../Includes/pq_kernels.cu"
 #include <stdlib.h>
 
 int main(){
