@@ -105,7 +105,7 @@ public:
 	*/
 	__host__ __device__
 	int heuristicEval(){
-		return winner;
+		return -winner;
 	}
 
 
