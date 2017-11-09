@@ -7,11 +7,11 @@
 class Node{
 public:
 	int key;
-	GameState *val;
+	TicTacToeState *val;
 
 	
 	__host__ __device__
-	Node(int a,GameState *b){
+	Node(int a,TicTacToeState *b){
 		key = a;
 		val = b;
 	}
@@ -26,11 +26,21 @@ public:
 	}
 	
 	__host__ __device__
-	GameState* getVal(){
+	TicTacToeState* getVal(){
 		return val;
 	}
 	
+	__host__ __device__
+	bool operator <(const Node& n) {
+         if(key < n.key) {
+            return true;
+         }
+         return false;
+      }
+	
 };
+
+__host__ __device__ bool operator<(const Node &lhs, const Node &rhs) { return (lhs.key < rhs.key); };
 
 class PQNode{
 public:
@@ -111,10 +121,10 @@ public:
 	}
 	
 	__host__ __device__
-	void deleteUpdate(int *arr, int size, int index){
+	void deleteUpdate(Node *arr, int size, int index){
 		nodes[index].size = 0;
-		for(int i=0;i<size&&i<NUM_PER_NODE&&arr[i]<INT_MAX;i++){
-			nodes[index].nodes[nodes[index].size].key = arr[i];
+		for(int i=0;i<size&&i<NUM_PER_NODE&&arr[i].key<INT_MAX;i++){
+			nodes[index].nodes[nodes[index].size] = arr[i];
 			nodes[index].size++;
 		}
 	}

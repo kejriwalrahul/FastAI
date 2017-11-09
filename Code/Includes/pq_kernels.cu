@@ -3,7 +3,7 @@ __global__ void print_val(PriorityQueue *pq)
 	printf("%d %d\n",threadIdx.x,pq->getSize());
 }
 
-__global__ void insert(PriorityQueue *pq, InsertTable *table,int* offsets, int size){
+__global__ void insert(PriorityQueue *pq, InsertTable *table,int* offsets, int size,int *num_inserts){
 	int index = threadIdx.x +blockIdx.x*blockDim.x;
 	if(index < size){
 		int offset = offsets[index];
@@ -53,7 +53,7 @@ __global__ void insert(PriorityQueue *pq, InsertTable *table,int* offsets, int s
 		}
 	}
 }
-/*
+
 __global__ void delete_update(PriorityQueue *pq, DeleteTable *table, int* offsets, int size){
 	int index = threadIdx.x +blockIdx.x*blockDim.x;
 	if(index < size){
@@ -61,23 +61,24 @@ __global__ void delete_update(PriorityQueue *pq, DeleteTable *table, int* offset
 		int num_node = table->indices[offset];
 		int left = 2*num_node + 1;
 		int right = 2*num_node + 2;
-		int arr[3*NUM_PER_NODE];
+		Node arr[3*NUM_PER_NODE];
 		int tot_size = 0;
 		int done = 0;
 		int tmp;
+		Node tmp_node;
 		if(pq->nodes[left].size == 0 && pq->nodes[right].size == 0){
 			table->status[offset] = 0;
 			done = 1;
 		}
 		else{
 			for(int i=0;i<pq->nodes[num_node].size;i++){
-				arr[tot_size++] = pq->nodes[num_node].nodes[i].key;
+				arr[tot_size++] = pq->nodes[num_node].nodes[i];
 			}
 			for(int i=0;i<pq->nodes[left].size;i++){
-				arr[tot_size++] = pq->nodes[left].nodes[i].key;
+				arr[tot_size++] = pq->nodes[left].nodes[i];
 			}
 			for(int i=0;i<pq->nodes[right].size;i++){
-				arr[tot_size++] = pq->nodes[right].nodes[i].key;
+				arr[tot_size++] = pq->nodes[right].nodes[i];
 			}
 			if(pq->nodes[right].size==0 && pq->nodes[num_node].nodes[pq->nodes[num_node].size-1].key < pq->nodes[left].nodes[0].key){
 					table->status[offset] = 0;
@@ -95,15 +96,15 @@ __global__ void delete_update(PriorityQueue *pq, DeleteTable *table, int* offset
 			if(done != 1){
 				for(int i=0;i<tot_size;i++){
 					for(int j=i+1;j<tot_size;j++){
-						if(arr[i] > arr[j]){
-							tmp = arr[i];
+						if(arr[i].key > arr[j].key){
+							tmp_node = arr[i];
 							arr[i] = arr[j];
-							arr[j] = tmp;
+							arr[j] = tmp_node;
 						}
 					}
 				}
 				for(int i=0;i<NUM_PER_NODE&&i<tot_size;i++){
-					pq->nodes[num_node].nodes[i].key = arr[i];
+					pq->nodes[num_node].nodes[i] = arr[i];
 				}
 				
 				if(pq->nodes[right].nodes[pq->nodes[right].size-1].key > pq->nodes[left].nodes[pq->nodes[left].size-1].key){
@@ -124,7 +125,11 @@ __global__ void delete_update(PriorityQueue *pq, DeleteTable *table, int* offset
 			}
 		}
 	}
-}*/
+}
+
+__global__ void sss_star_algo(){
+	
+}
 
 /*__global__ void writeToNode(PriorityQueue* pq, InsertTable *table, int *offsets, int size){
 	int index = threadIdx.x +blockIdx.x*blockDim.x;

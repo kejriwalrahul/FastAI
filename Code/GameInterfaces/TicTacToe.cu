@@ -65,6 +65,7 @@ class TicTacToeState : public GameState {
 	*/
 	bool isOver;
 	int  winner;
+	TicTacToeState *parent_node;
 
 public:
 
@@ -171,7 +172,7 @@ public:
 		new_state->turn = !this->turn;		
 		new_state->occupied[loc] = true; 
 		new_state->owner[loc] = this->turn;
-		new_state->parent = this;
+		new_state->parent_node = this;
 		int child_val = 0;
 		for(int i=0;i<=loc;i++){
 			if(this->occupied[i]==0){
@@ -204,7 +205,7 @@ public:
 	bool isLastChild(){
 		int last_empty = BOARD_SIZE;
 		for(int i=BOARD_SIZE-1;i>=0;i--){
-			if(((TicTacToeState*)parent)->occupied[i]==0){
+			if((parent_node)->occupied[i]==0){
 				last_empty = i;
 				break;
 			}
