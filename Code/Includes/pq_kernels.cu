@@ -12,21 +12,22 @@ __global__ void insert(PriorityQueue *pq, InsertTable *table,int* offsets, int s
 			pq->writeToNode(table->elements[offset],table->num_elements[offset],table->target[offset]); // Make this atomic
 			table->status[offset] = 0;
 			table->num_elements[offset] = 0;
+			
 		}
 		else{
-			int arr[2*NUM_PER_NODE];
+			Node arr[2*NUM_PER_NODE];
 			int tot_size = 0;
-			int tmp;
+			Node tmp;
 			for(int i=0;i<table->num_elements[offset];i++){
 				arr[tot_size++] = table->elements[offset][i];
 			}
 			int node_num = table->indices[offset];
 			for(int i=0;i<pq->nodes[node_num].size;i++){
-				arr[tot_size++] = pq->nodes[node_num].nodes[i].key;
+				arr[tot_size++] = pq->nodes[node_num].nodes[i];
 			}
 			for(int i=0;i<tot_size;i++){
 				for(int j=i+1;j<tot_size;j++){
-					if(arr[i] > arr[j]){
+					if(arr[i].key > arr[j].key){
 						tmp = arr[i];
 						arr[i] = arr[j];
 						arr[j] = tmp;
@@ -34,7 +35,7 @@ __global__ void insert(PriorityQueue *pq, InsertTable *table,int* offsets, int s
 				}
 			}
 			for(int i=0;i<NUM_PER_NODE&&i<tot_size;i++){
-				pq->nodes[node_num].nodes[i].key = arr[i];
+				pq->nodes[node_num].nodes[i] = arr[i];
 			}
 			if(tot_size>NUM_PER_NODE){
 				for(int i=NUM_PER_NODE;i<tot_size;i++){
@@ -52,7 +53,7 @@ __global__ void insert(PriorityQueue *pq, InsertTable *table,int* offsets, int s
 		}
 	}
 }
-
+/*
 __global__ void delete_update(PriorityQueue *pq, DeleteTable *table, int* offsets, int size){
 	int index = threadIdx.x +blockIdx.x*blockDim.x;
 	if(index < size){
@@ -110,14 +111,7 @@ __global__ void delete_update(PriorityQueue *pq, DeleteTable *table, int* offset
 					left = right;
 					right = tmp;
 				}
-				/*for(int i=R;i<tot_size&&i<2*R;i++){
-					pq->nodes[left].nodes[i].key = arr[i];
-					printf("%d\n",pq->nodes[left].nodes[i].key);
-				}
-				for(int i=R;i<tot_size&&i<3*R;i++){
-					pq->nodes[right].nodes[i].key = arr[i];
-					printf("%d\n",pq->nodes[right].nodes[i].key);
-				}*/
+				
 				pq->deleteUpdate(arr+NUM_PER_NODE,NUM_PER_NODE,left);
 				pq->deleteUpdate(arr+2*NUM_PER_NODE,NUM_PER_NODE,right);
 				pq->nodes[num_node].size = (tot_size < NUM_PER_NODE)?tot_size:NUM_PER_NODE;
@@ -130,7 +124,7 @@ __global__ void delete_update(PriorityQueue *pq, DeleteTable *table, int* offset
 			}
 		}
 	}
-}
+}*/
 
 /*__global__ void writeToNode(PriorityQueue* pq, InsertTable *table, int *offsets, int size){
 	int index = threadIdx.x +blockIdx.x*blockDim.x;

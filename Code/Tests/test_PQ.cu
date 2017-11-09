@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../GameInterfaces/GameState.cu"
 #include "../Includes/PriorityQueue.cu"
 #include "../Includes/pq_kernels.cu"
 #include <stdlib.h>
@@ -84,7 +85,8 @@ int main(){
 			vals[j] = j*100;
 			printf("%d\n",vals[j]);
 		}
-	pq->deleteUpdate(vals,3,0);
+	vals[2] = INT_MAX;
+	pq->deleteUpdate(vals,2,0);
 	cudaMemcpy(d_pq,pq,sizeof(PriorityQueue), cudaMemcpyHostToDevice);
 	h_deltab->addEntry();
 	for(int i=0;i<2;i++){

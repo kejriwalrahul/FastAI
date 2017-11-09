@@ -7,18 +7,18 @@
 class Node{
 public:
 	int key;
-	int val;
+	GameState *val;
 
 	
 	__host__ __device__
-	Node(int a,int b){
+	Node(int a,GameState *b){
 		key = a;
 		val = b;
 	}
 	__host__ __device__
 	Node(){
-		key = 0;
-		val = 0;
+		key = INT_MAX;
+		val = NULL;
 	}
 	__host__ __device__
 	int getKey(){
@@ -26,7 +26,7 @@ public:
 	}
 	
 	__host__ __device__
-	int getVal(){
+	GameState* getVal(){
 		return val;
 	}
 	
@@ -67,7 +67,7 @@ public:
 	PriorityQueue(){
 		curr_size = 0;
 		for(int i=0;i<QSIZE;i++){
-			sizes[i] = 0;
+			nodes[i].size = 0;
 		}
 	}
 	
@@ -77,11 +77,18 @@ public:
 	}
 	
 	__host__ __device__
-	int getInsertTarget(){
+	int getInsertTarget(int size, bool *done, int *inserted){
 		int ans = -1;
 		for(int i=0;i<QSIZE;i++){
-			if(sizes[i]!=NUM_PER_NODE){
+			if(nodes[i].size!=NUM_PER_NODE){
 				ans = i;
+				*inserted = size<(NUM_PER_NODE - nodes[i].size)?size:NUM_PER_NODE - nodes[i].size;
+				if(*inserted < size){
+					*done = false;
+				}
+				else{
+					*done = true;
+				}
 				break;
 			}
 		}
@@ -89,9 +96,9 @@ public:
 	}
 	
 	__host__ __device__
-	void writeToNode(int *arr, int size, int index){
+	void writeToNode(Node *arr, int size, int index){
 		for(int i=0;i<size&&nodes[index].size<NUM_PER_NODE;i++){
-			nodes[index].nodes[nodes[index].size].key = arr[i];
+			nodes[index].nodes[nodes[index].size] = arr[i];
 			nodes[index].size++;
 		}
 		
@@ -99,9 +106,14 @@ public:
 	}
 	
 	__host__ __device__
+	PQNode readRoot(){
+		return nodes[0];
+	}
+	
+	__host__ __device__
 	void deleteUpdate(int *arr, int size, int index){
 		nodes[index].size = 0;
-		for(int i=0;i<size&&i<NUM_PER_NODE;i++){
+		for(int i=0;i<size&&i<NUM_PER_NODE&&arr[i]<INT_MAX;i++){
 			nodes[index].nodes[nodes[index].size].key = arr[i];
 			nodes[index].size++;
 		}
@@ -127,7 +139,7 @@ class InsertTable{
 public:
 	int status[QSIZE]; // Says whether the entry in the table is in use or not.
 	int indices[QSIZE]; // Index of the node in the priority queue on which the process should happen.
-	int elements[QSIZE][NUM_PER_NODE]; // Set of elements to be inserted at the node.
+	Node elements[QSIZE][NUM_PER_NODE]; // Set of elements to be inserted at the node.
 	int num_elements[QSIZE];
 	int level[QSIZE]; // Level number of the node on which the operation occurs.
 	int target[QSIZE]; // Target node to insert the set of elements.
@@ -143,7 +155,7 @@ public:
 	}
 	
 	__host__ __device__
-	void addEntry(int index,int *elmts,int size,int tgt){
+	void addEntry(int index,Node *elmts,int size,int tgt){
 		int off = 0;
 		while(status[off]!=0){
 			off++;
@@ -184,7 +196,7 @@ public:
 				printf("Index: %d\n",indices[i]);
 				printf("Elements: ");
 				for(int j=0;j<num_elements[i];j++){
-					printf("%d ",elements[i][j]);
+					printf("%d ",elements[i][j].key);
 				}
 				printf("\nLevel: %d\n",level[i]);
 				printf("Target: %d\n",target[i]);

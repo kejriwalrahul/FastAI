@@ -204,7 +204,7 @@ public:
 	bool isLastChild(){
 		int last_empty = BOARD_SIZE;
 		for(int i=BOARD_SIZE-1;i>=0;i--){
-			if(((TicTacToeState*)parent)->occupied[i]==1){
+			if(((TicTacToeState*)parent)->occupied[i]==0){
 				last_empty = i;
 				break;
 			}
