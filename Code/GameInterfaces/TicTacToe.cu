@@ -65,10 +65,12 @@ class TicTacToeState : public GameState {
 	*/
 	bool isOver;
 	int  winner;
-	TicTacToeState *parent_node;
+	
+	bool isSolved;
+	bool isRoot;
 
 public:
-
+	TicTacToeState *parent_node;
 	/*	
 		Initialize game state
 	*/
@@ -77,6 +79,9 @@ public:
 		for(int i=0; i<BOARD_SIZE; i++)
 			occupied[i] = false;
 		turn = false;
+		parent_node = NULL;
+		isSolved = false;
+		isRoot = false;
 	}
 	
 	
@@ -89,6 +94,17 @@ public:
 		moves = new bool[BOARD_SIZE];
 		for(int i=0; i<BOARD_SIZE; i++)
 			moves[i] = !occupied[i];
+	}
+	
+	 __host__ __device__		
+	void moveGen(int *num_moves){
+		*num_moves = 0;
+		moves_length = BOARD_SIZE;
+		moves = new bool[BOARD_SIZE];
+		for(int i=0; i<BOARD_SIZE; i++){
+			moves[i] = !occupied[i];
+			*num_moves += moves[i];
+		}
 	}
 
 
@@ -215,5 +231,47 @@ public:
 		}
 		return false;
 	}
-
+	
+	__host__ __device__
+	int getNextChild(){
+		int count = -1;
+		int index = -1;
+		for(int i=0;i<BOARD_SIZE&&count<child_num+1;i++){
+			if((parent_node)->occupied[i]==0){
+				count ++;
+				index = i;
+			}
+		}
+		return index;
+	}
+	
+	__host__ __device__
+	bool getSolved(){
+		return isSolved;
+	}
+	
+	__host__ __device__
+	void setSolved(bool a){
+		isSolved = a;
+	}
+	
+	__host__ __device__
+	bool getRoot(){
+		return isRoot;
+	}
+	
+	__host__ __device__
+	void setRoot(bool a){
+		isRoot = a;
+	}
+	
+	__host__ __device__
+	bool getOver(){
+		return isOver;
+	}
+	
+	__host__ __device__
+	bool getTurn(){
+		return turn;
+	}
 };

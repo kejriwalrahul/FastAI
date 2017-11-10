@@ -250,6 +250,7 @@ public:
 		for(int i=0;i<QSIZE;i++){
 			if(status[i] == 1){
 				printf("Index: %d\n",indices[i]);
+				count++;
 			}
 		}
 		printf("Done XXXX %d\n\n",count);
