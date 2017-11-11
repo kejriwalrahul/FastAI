@@ -12,36 +12,31 @@
 using namespace std;
 
 int main(){
-	GameState *g = new TicTacToeState;
+	TicTacToeState *g = new TicTacToeState;
 
-	// g = g->makeMove(0);
-	// g = g->makeMove(1);
-	// g = g->makeMove(2);
-	// g = g->makeMove(3);
-	// g = g->makeMove(4);
-	// g = g->makeMove(5);
-	// g = g->makeMove(7);
-	// g = g->makeMove(6);
+	// cout << "Minimax value: " << iterativeAlphaBeta(g, INT_MIN, INT_MAX, 9, false) << endl;
 
-	cout << "Minimax value: " << recursiveAlphaBeta(g, INT_MIN, INT_MAX, 9, true) << endl;
-	cout << "Minimax value: " << iterativeAlphaBeta(g, INT_MIN, INT_MAX, 9, true) << endl;
-
+	/*
 	cout << endl << "On GPU iterative version: " << endl;
 
 	TicTacToeState *dg, *cg = new TicTacToeState;
+	cg = cg->makeMove(0);
+	
 	int *res, ans;
 	cudaMalloc(&dg, sizeof(TicTacToeState));
 	cudaMalloc(&res, sizeof(int));
 	cudaMemcpy(dg, cg, sizeof(TicTacToeState), cudaMemcpyHostToDevice);
 
-	kernel<<<1,1>>>(dg, INT_MIN, INT_MAX, 9, true, res);
+	kernel<<<1,1>>>(dg, INT_MIN, INT_MAX, 9, false, res);
 	cudaDeviceSynchronize();	
 	cudaError_t err = cudaGetLastError();  
 	if (err != cudaSuccess)		printf("Error: %s\n", cudaGetErrorString(err));
 	else						printf("No Error\n");
 
 	cudaMemcpy(&ans, res, sizeof(int), cudaMemcpyDeviceToHost);
+	*/
 
-	cout << "Minimax value: " << ans << endl;
+	cout << "Minimax value (CPU): " << recursiveAlphaBeta(g, INT_MIN, INT_MAX, 9, !(g->turn)) << endl;
+	cout << "Best Move (GPU): " << cpu_alphabeta_starter(g, 9, !(g->turn), -1) << endl;
 	return 0;
 }

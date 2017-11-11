@@ -23,8 +23,35 @@ public:
 		To store best known next move if computed
 	*/
 	int optimal_move;
-	GameState *parent; // Stores the parent node.
-	int child_num; // Stores the child number of the parent which gives the current node.
+	
+	/*
+		Store turn of player
+			false = Player 0
+			true  = Player 1
+	*/
+	bool turn;
+	
+	/*
+		Stores the parent node and child number of parent which gives current node 
+	*/
+	GameState *parent; 
+	GameState **children; 
+	int child_num; 
+
+	/*
+		Stack vars for Alpha Beta
+	*/
+	int alpha;
+	int beta;
+	int depth;
+	bool isMax;
+	int next_move;
+	int val;
+
+	bool started_loop;
+	int last_returned_val;
+	GameState *prev;
+	GameState *next;
 
 	/*
 		Evaluation function to be defined by concrete game interface
@@ -62,9 +89,26 @@ public:
 		Functions specific to SSS*
 		Added by Srinidhi Prabhu, CS14B028
 	*/
-	
 	__host__ __device__
 	virtual bool isLastChild() = 0;
-	
-	
+
+	__host__ __device__
+	virtual int piece(int) = 0;
+
+
+	/*
+		Stack vars initialize
+	*/
+	__host__ __device__
+	void stateReset(int a, int b, int d, bool iM){
+		alpha = a;
+		beta  = b;
+		depth = d;
+		isMax = iM;
+		next_move = -1;
+		prev = next = NULL;
+		if(iM)	last_returned_val = val = INT_MIN;
+		else	last_returned_val = val = INT_MAX;
+		started_loop = false;
+	}		
 };

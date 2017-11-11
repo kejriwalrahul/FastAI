@@ -46,12 +46,6 @@ class Connect4State : public GameState {
 	bool occupied[BOARD_SIZE];
 	bool owner[BOARD_SIZE];
 
-	/*
-		Store turn of player
-			false = Player 0
-			true  = Player 1
-	*/
-	bool turn;
 
 	/*
 		Store if game is over

@@ -39,6 +39,19 @@ int CPU_winning_patterns[WIN_SIZE][ROW_SIZE] = {
 	{2, 4, 6},
 };
 
+__device__
+int GPU_evaluationTable[NUM_ROWS][NUM_COLS] = {
+	{3, 2, 3},
+	{2, 4, 2},
+	{3, 2, 3}
+};
+
+int CPU_evaluationTable[NUM_ROWS][NUM_COLS] = {
+	{3, 2, 3},
+	{2, 4, 2},
+	{3, 2, 3}
+};
+
 class TicTacToeState : public GameState {
 
 	/*
@@ -53,19 +66,22 @@ class TicTacToeState : public GameState {
 	bool owner[BOARD_SIZE];
 
 	/*
-		Store turn of player
-			false = Player 0
-			true  = Player 1
-	*/
-	bool turn;
-
-	/*
 		Store if game is over
 		If over, store winner
 	*/
 	bool isOver;
 	int  winner;
+
+	/*
+		Store pointer to parent GameState
+	*/
 	TicTacToeState *parent_node;
+
+	/*
+		Player heuristics
+	*/
+	int p0_hval;
+	int p1_hval;
 
 public:
 
@@ -77,6 +93,8 @@ public:
 		for(int i=0; i<BOARD_SIZE; i++)
 			occupied[i] = false;
 		turn = false;
+		p0_hval = p1_hval = 0;
+		optimal_move = 0;
 	}
 
 
@@ -89,6 +107,10 @@ public:
 		winner = other.winner;
 		turn   = other.turn;
 		moves_length = other.moves_length;
+		p0_hval = other.p0_hval;
+		p1_hval = other.p1_hval;
+		parent_node = other.parent_node;
+		optimal_move = other.optimal_move;
 
 		memcpy(owner, other.owner, BOARD_SIZE*sizeof(bool));
 		memcpy(occupied, other.occupied, BOARD_SIZE*sizeof(bool));
@@ -121,7 +143,10 @@ public:
 	*/
 	__host__ __device__
 	int heuristicEval(){
-		return -winner;
+		if(!isOver)
+			return p0_hval-p1_hval;
+		else
+			return -winner*100;
 	}
 
 
@@ -176,6 +201,7 @@ public:
 		return;
 	}
 
+
 	/*
 		Creates new TicTacToeState by making move at loc
 		
@@ -194,6 +220,13 @@ public:
 				child_val++;
 			}
 		}
+		#ifdef  __CUDA_ARCH__
+		if(turn == false)	new_state->p0_hval += GPU_evaluationTable[loc/NUM_ROWS][loc%NUM_ROWS];
+		else 				new_state->p1_hval += GPU_evaluationTable[loc/NUM_ROWS][loc%NUM_ROWS];
+		#else
+		if(turn == false)	new_state->p0_hval += CPU_evaluationTable[loc/NUM_ROWS][loc%NUM_ROWS];
+		else 				new_state->p1_hval += CPU_evaluationTable[loc/NUM_ROWS][loc%NUM_ROWS];
+		#endif
 		new_state->child_num = child_val;
 		new_state->updateIfWinner();
 		return new_state;
@@ -214,8 +247,7 @@ public:
 	
 	/*
 		isLastChild for SSS*
-	*/
-	
+	*/	
 	__host__ __device__
 	bool isLastChild(){
 		int last_empty = BOARD_SIZE;
@@ -231,4 +263,12 @@ public:
 		return false;
 	}
 
+
+	/*
+		Returns board piece
+	*/
+		__host__ __device__
+	int piece(int i){
+		return (occupied[i]?((owner[i])?1:-1):0);
+	}
 };
