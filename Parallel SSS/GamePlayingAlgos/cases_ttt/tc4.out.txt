@@ -3,6 +3,6 @@ X - -
 - O - 
 - - - 
 Final Board
-X - X 
+X X - 
 - O - 
 - - - 
