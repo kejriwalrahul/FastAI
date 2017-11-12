@@ -1,32 +1,35 @@
 #include <stdio.h>
-#include "../GameInterfaces/TicTacToe.cu"
-#include "../Includes/PriorityQueue.cu"
-#include "../Includes/pq_kernels.cu"
+#include "../GameInterfaces/Connect4.cu"
+#include "../Includes/PriorityQueue_C4.cu"
+#include "../Includes/kernels_c4.cu"
 #include <thrust/host_vector.h>
 #include <thrust/sort.h>
-#define BRANCH_FACTOR_TIC 10
+#include "../Includes/timer.h"
+#define BRANCH_FACTOR_C4 20
 #define NUM_CANDIDATES 1000
+
 
 int main(){
 	InsertTable *h_instab,*d_instab;
 	DeleteTable *h_deltab,*d_deltab;
 	int h_offsets[QSIZE],*d_offsets;
-	Node h_to_insert[NUM_PER_NODE*BRANCH_FACTOR_TIC];
+	Node h_to_insert[NUM_PER_NODE*BRANCH_FACTOR_C4];
 	Node *d_to_insert;
 	Node *d_to_send;
 	Node *d_candidates;
 	int *num_inserts;
 	int *bestMove;
 	PriorityQueue *h_pq,*d_pq;
-	TicTacToeState *d_state;
+	Connect4State *d_state;
 	char board[BOARD_SIZE];
+	int col[NUM_COLS];
 	cudaMalloc((void **)&d_pq,sizeof(PriorityQueue));
 	cudaMalloc((void **)&d_instab,sizeof(InsertTable));
 	cudaMalloc((void **)&d_deltab,sizeof(DeleteTable));
-	cudaMalloc((void **)&d_to_insert,NUM_PER_NODE*BRANCH_FACTOR_TIC*sizeof(Node));
+	cudaMalloc((void **)&d_to_insert,NUM_PER_NODE*BRANCH_FACTOR_C4*sizeof(Node));
 	cudaMalloc((void **)&d_to_send,NUM_PER_NODE*sizeof(Node));
 	cudaMalloc((void **)&d_candidates,NUM_CANDIDATES*sizeof(Node));
-	cudaMalloc((void **)&d_state,sizeof(TicTacToeState));
+	cudaMalloc((void **)&d_state,sizeof(Connect4State));
 	cudaMalloc(&d_offsets,QSIZE*sizeof(int));
 	cudaHostAlloc(&num_inserts,sizeof(int),0);
 	cudaHostAlloc(&bestMove,sizeof(int),0);
@@ -34,8 +37,9 @@ int main(){
 	h_instab = new InsertTable();
 	h_deltab = new DeleteTable();
 	h_pq = new PriorityQueue();
+	CPUTimer cputimer;
 	
-	Node node_list[2*NUM_PER_NODE];
+	
 	bool isInsertDone;
 	int insertedSize;
 	int num_indices;
@@ -46,14 +50,19 @@ int main(){
 	
 	// Create root node
 	
-	//cudaMemcpy(d_state,h_state,sizeof(TicTacToeState),cudaMemcpyHostToDevice);
-	int n,k;
+	//cudaMemcpy(d_state,h_state,sizeof(Connect4State),cudaMemcpyHostToDevice);
+	int n,c,k;
 	scanf("%d",&n);
 	for(int i=0;i<BOARD_SIZE;i++){
-		board[i] = '-';
+		board[i] = '|';
+	}
+	for(int i=0;i<NUM_COLS;i++){
+		col[i] = 0;
 	}
 	for(int i=0;i<n;i++){
-		scanf("%d",&k);
+		scanf("%d",&c);
+		k = OFFSET(col[c],c);
+		col[c]++;
 		h_offsets[i] = k;
 		if(i%2==0){
 			board[k] = 'X';
@@ -64,12 +73,20 @@ int main(){
 		player = !player;
 	}
 	printf("Initial Board\n");
-	for(int i=0;i<3;i++){
-		for(int j=0;j<3;j++){
-			printf("%c ",board[i*3+j]);
+	/*for(int i=0;i<NUM_ROWS;i++){
+		for(int j=0;j<NUM_COLS;j++){
+			printf("%c ",board[OFFSET(i,j)]);
 		}
 		printf("\n");
+	}*/
+	for(int i=NUM_ROWS-1; i>=0; i--){
+		printf("|");
+		for(int j=0; j<NUM_COLS; j++)
+			printf("%c ", board[OFFSET(i,j)]);
+		printf("\n");
 	}
+	
+	cputimer.Start();
 	cudaMemcpy(d_offsets,h_offsets,n*sizeof(int), cudaMemcpyHostToDevice);
 	createRootNode<<<1,1>>>(d_to_insert,d_offsets,n);
 	cudaMemcpy(h_to_insert,d_to_insert,sizeof(Node), cudaMemcpyDeviceToHost);
@@ -93,13 +110,7 @@ int main(){
 	
 	// At this stage the root node is present in the priority queue.
 	
-	/*int *num_candidates;
-	cudaHostAlloc(&num_candidates,sizeof(int),0);
 	
-	*num_candidates = 0;
-	while(!(*isEnd) && *num_candidates < NUM_CANDIDATES){
-		
-	}*/
 	// At this stage all candidates are in the priority queue.
 	bool *isEnd;
 	cudaHostAlloc(&isEnd,sizeof(bool),0);
@@ -114,8 +125,8 @@ int main(){
 	*num_inserts = 0;
 	int sum = 0;
 	while(!(*isEnd)){
-	//while(time < 245){
-		cudaMemcpy(h_to_insert,d_to_insert,NUM_PER_NODE*BRANCH_FACTOR_TIC*sizeof(Node), cudaMemcpyDeviceToHost);
+	//while(time < 20){
+		cudaMemcpy(h_to_insert,d_to_insert,NUM_PER_NODE*BRANCH_FACTOR_C4*sizeof(Node), cudaMemcpyDeviceToHost);
 		cudaMemcpy(h_pq,d_pq,sizeof(PriorityQueue), cudaMemcpyDeviceToHost);
 		cudaMemcpy(h_instab,d_instab,sizeof(InsertTable), cudaMemcpyDeviceToHost);
 		cudaMemcpy(h_deltab,d_deltab,sizeof(DeleteTable), cudaMemcpyDeviceToHost);
@@ -187,7 +198,7 @@ int main(){
 			}
 		}
 		cudaMemcpy(d_offsets,h_offsets,num_indices*sizeof(int), cudaMemcpyHostToDevice);
-		//cudaMemcpy(d_deltab,h_deltab,sizeof(DeleteTable), cudaMemcpyHostToDevice);
+		cudaMemcpy(d_deltab,h_deltab,sizeof(DeleteTable), cudaMemcpyHostToDevice);
 		delete_update<<<(num_indices+1023/1024),1024>>>(d_pq,d_deltab,d_offsets,num_indices);
 		//printf("odd deletes: %d\n",num_indices);
 		cudaMemcpy(h_instab,d_instab,sizeof(InsertTable), cudaMemcpyDeviceToHost);
@@ -214,22 +225,25 @@ int main(){
 		time++;
 	}
 	
-	cudaDeviceSynchronize();
-	cudaMemcpy(h_pq,d_pq,sizeof(PriorityQueue), cudaMemcpyDeviceToHost);
+	//cudaDeviceSynchronize();
+	//cudaMemcpy(h_pq,d_pq,sizeof(PriorityQueue), cudaMemcpyDeviceToHost);
+	cputimer.Stop();
+	//printf("%d\n",*isEnd);
 	//printf("%d\n",*bestMove);
 	//printf("Iters: %d Nodes: %d\n",time,sum);
 	if(n%2==0){
-		board[*bestMove] = 'X';
+		board[OFFSET(col[*bestMove],*bestMove)] = 'X';
 	}
 	else{
-		board[*bestMove] = 'O';
+		board[OFFSET(col[*bestMove],*bestMove)] = 'O';
 	}
 	printf("Final Board\n");
-	for(int i=0;i<3;i++){
-		for(int j=0;j<3;j++){
-			printf("%c ",board[i*3+j]);
-		}
+	for(int i=NUM_ROWS-1; i>=0; i--){
+		printf("|");
+		for(int j=0; j<NUM_COLS; j++)
+			printf("%c ", board[OFFSET(i,j)]);
 		printf("\n");
 	}
+	printf("Time taken: %lf milliseconds\n",cputimer.Elapsed()*1000);
 	return 0;
 }
