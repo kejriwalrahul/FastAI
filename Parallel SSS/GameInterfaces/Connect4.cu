@@ -51,8 +51,12 @@ class Connect4State : public GameState {
 		Store if game is over
 		If over, store winner
 	*/
+	bool turn;
 	bool isOver;
 	int  winner;
+	
+	bool isSolved;
+	bool isRoot;
 
 	/*
 		Store current heuristic evaluation of the game-state
@@ -63,7 +67,9 @@ class Connect4State : public GameState {
 	short p1_hval;
 
 public:
-
+	Connect4State *parent_node;
+	int bestMove;
+	int depth;
 	/*	
 		Initialize game state
 	*/
@@ -101,6 +107,17 @@ public:
 		moves = new bool[NUM_COLS];
 		for(int i=0; i<NUM_COLS; i++)
 			moves[i] = !occupied[OFFSET(NUM_ROWS-1, i)];
+	}
+	
+	__host__ __device__		
+	void moveGen(int *num_moves){
+		*num_moves = 0;
+		moves_length = NUM_COLS;
+		moves = new bool[NUM_COLS];
+		for(int i=0; i<NUM_COLS; i++){
+			moves[i] = !occupied[OFFSET(NUM_ROWS-1, i)];
+			*num_moves += moves[i];
+		}
 	}
 
 
@@ -156,7 +173,8 @@ public:
 		new_state->isOver = new_state->occupied[OFFSET(NUM_ROWS-1, 0)];
 		for(int i=1; i<NUM_COLS; i++)
 			new_state->isOver &= new_state->occupied[OFFSET(NUM_ROWS-1, i)];
-
+		
+		new_state->depth = this->depth + 1;
 		// Check if current move gave a win to current player
 		new_state->update_win(row, loc);
 
@@ -175,7 +193,8 @@ public:
 			new_state->p1_hval += CPU_evaluationTable[row][loc];
 			#endif			
 		}
-
+		new_state->parent_node = this;
+		new_state->child_num = loc;
 		return new_state;
 	}
 
@@ -242,7 +261,7 @@ public:
 
 		if((l+r+1>=4) || (t+b+1>=4) || (tl+br+1>=4) || (tr+bl+1>=4)){
 			isOver = true;
-			winner = my_turn;
+			//winner = my_turn;
 		}
 	}
 
@@ -253,6 +272,27 @@ public:
 	__host__ __device__
 	int heuristicEval(){
 		return p0_hval - p1_hval;
+	}
+	
+	__host__ __device__
+	int heuristicEval(bool player){
+		int val = p1_hval - p0_hval;
+		if(player){
+			if(!isOver){
+				return val;
+			}
+			else{
+				return -100;
+			}
+		}
+		else{
+			if(!isOver){
+				return -val;
+			}
+			else{
+				return 100;
+			}
+		}
 	}
 
 
@@ -277,4 +317,95 @@ public:
 	int piece(int i){
 		return (occupied[i]?((owner[i])?1:-1):0);
 	}
+	
+	/*
+		Functions for SSS*
+	*/
+	
+	__host__ __device__
+	bool isLastChild(){
+		for(int i=BOARD_SIZE-1;i>=0;i--){
+			if((parent_node)->occupied[i]==0&&occupied[i]==1){
+				return true;
+			}
+			else if((parent_node)->occupied[i]==0){
+				return false;
+			}	
+		}
+		return false;
+	}
+	
+	__host__ __device__
+	int getNextChild(){
+		int index;
+		int flag = 0;
+		for(int i=0;i<BOARD_SIZE;i++){
+			if(flag == 0){
+				if(!((parent_node)->occupied[i]) && occupied[i]){
+					index = i;
+					flag = 1;
+					//printf("in next child %d\n",index);				
+				}
+			}
+			else{
+				if(!((parent_node)->occupied[i])){
+					index = i;
+					break;
+				}
+			}
+		}
+		return index;
+		
+	}
+	
+	__host__ __device__
+	bool getSolved(){
+		return isSolved;
+	}
+	
+	__host__ __device__
+	void setSolved(bool a){
+		isSolved = a;
+	}
+	
+	__host__ __device__
+	bool getRoot(){
+		return isRoot;
+	}
+	
+	__host__ __device__
+	void setRoot(bool a){
+		isRoot = a;
+	}
+	
+	__host__ __device__
+	bool getOver(){
+		return isOver;
+	}
+	
+	__host__ __device__
+	bool getTurn(){
+		return turn;
+	}
+	
+	__host__ __device__
+	void setTurn(bool a){
+		this->turn = a;
+	}
+	
+	__host__ __device__
+	int getDepth(){
+		return depth;
+	}
+	
+	__host__ __device__
+	int getWinner(){
+		return winner;
+	}
+	
+	__host__ __device__
+	void setDepth(int a){
+		depth = a;
+	}
+	
 };
