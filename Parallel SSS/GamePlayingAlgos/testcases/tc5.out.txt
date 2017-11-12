@@ -1,0 +1,8 @@
+Initial Board
+X X O 
+O - X 
+X - O 
+Final Board
+X X O 
+O - X 
+X O O 
