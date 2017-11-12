@@ -14,6 +14,15 @@ using namespace std;
 int main(){
 	TicTacToeState *g = new TicTacToeState;
 
+	int num_moves;
+	cin >> num_moves; 
+
+	for(int i=0; i<num_moves; i++){
+		int move;
+		cin >> move;
+		g = g->makeMove(move);
+	}
+
 	// cout << "Minimax value: " << iterativeAlphaBeta(g, INT_MIN, INT_MAX, 9, false) << endl;
 
 	/*
@@ -37,7 +46,14 @@ int main(){
 	*/
 
 	cout << "Minimax value (CPU): " << recursiveAlphaBeta(g, INT_MIN, INT_MAX, 8, !(g->turn)) << endl;
-	// cout << "Best Move (GPU): " << cpu_alphabeta_starter(g, 9, !(g->turn), -1) << endl;
-	cout << "Best Move (GPU): " << cpu_alphabeta_starter(g, 9, !(g->turn), 60) << endl;
+	int best_move = cpu_alphabeta_starter(g, 9, !(g->turn), -1, 3);
+	cout << "Best Move (GPU): " << best_move << endl;
+
+	cout << "Initial Board: " << endl;
+	g->printState();
+
+	cout << "Next Board: " << endl;
+	g->makeMove(best_move)->printState();
+
 	return 0;
 }
