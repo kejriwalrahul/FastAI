@@ -71,11 +71,6 @@ class TicTacToeState : public GameState {
 	*/
 	bool isOver;
 	int  winner;
-
-	/*
-		Store pointer to parent GameState
-	*/
-	TicTacToeState *parent_node;
 	
 	/*
 		Player heuristics
@@ -84,7 +79,12 @@ class TicTacToeState : public GameState {
 	int p1_hval;
 
 public:
+
+	/*
+		Store pointer to parent GameState
+	*/
 	TicTacToeState *parent_node;
+
 	/*	
 		Initialize game state
 	*/
@@ -264,7 +264,7 @@ public:
 		__host__ __device__
 	int piece(int i){
 		return (occupied[i]?((owner[i])?1:-1):0);
-	
+	}	
 	
 	__host__ __device__
 	bool getTurn(){

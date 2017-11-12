@@ -374,7 +374,7 @@ __global__ void kernel2(GameState **garr, int alpha, int beta, int depth, int is
 void add_children(GameState *g, int goto_depth, vector<GameState*> &children){
 	
 	// If leaf, add
-	if(goto_depth == 0){
+	if(goto_depth == 0 || g->isTerminal()){
 		children.push_back(g);
 		return;
 	}
@@ -398,7 +398,7 @@ void add_children(GameState *g, int goto_depth, vector<GameState*> &children){
 	Computes minimax of root given kernel results
 */
 int back_up(GameState *g, int goto_depth, int &best_move){
-	if(goto_depth == 0)
+	if(goto_depth == 0 || g->isTerminal())
 		return g->val;
 
 	best_move = 0;
@@ -437,8 +437,8 @@ int back_up(GameState *g, int goto_depth, int &best_move){
 	Calls kernel on leaves
 */
 template<class gameTypeState>
-int cpu_alphabeta_starter(gameTypeState *g, int depth, int isMax, int time){
-	int goto_depth = 2;
+int cpu_alphabeta_starter(gameTypeState *g, int depth, int isMax, int time, int goto_depth){
+	// int goto_depth = 3;
 	vector<GameState*> children;
 
 	/*
@@ -481,8 +481,8 @@ int cpu_alphabeta_starter(gameTypeState *g, int depth, int isMax, int time){
 		Phase 3: Backup result
 	*/
 	int best_move;
-	// if(time>0){
-	if(false){
+	// if(false){
+	if(time>0){
 		// printf("hello\n");
 		while(*once_done < num_leaves){
 			cudaError_t err = cudaGetLastError();  

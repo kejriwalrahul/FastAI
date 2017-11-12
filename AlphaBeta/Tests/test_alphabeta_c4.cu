@@ -14,6 +14,15 @@ using namespace std;
 int main(){
 	Connect4State *g = new Connect4State;
 
+	int num_moves;
+	cin >> num_moves; 
+
+	for(int i=0; i<num_moves; i++){
+		int move;
+		cin >> move;
+		g = g->makeMove(move);
+	}
+
 	// cout << "Minimax value: " << iterativeAlphaBeta(g, INT_MIN, INT_MAX, 9, false) << endl;
 
 	/*
@@ -38,6 +47,14 @@ int main(){
 
 	int depth = 7;
 	cout << "Minimax value (CPU): " << recursiveAlphaBeta(g, INT_MIN, INT_MAX, depth, !(g->turn)) << endl;
-	cout << "Best Move (GPU): " << cpu_alphabeta_starter<Connect4State>(g, depth, !(g->turn), -1) << endl;
+	int best_move = cpu_alphabeta_starter<Connect4State>(g, depth, !(g->turn), -1, 3);
+	cout << "Best Move (GPU): " << best_move << endl;
+	
+	cout << "Initial Board: " << endl;
+	g->printState();
+
+	cout << "Next Board: " << endl;
+	g->makeMove(best_move)->printState();
+
 	return 0;
 }
