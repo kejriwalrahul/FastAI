@@ -252,7 +252,11 @@ public:
 	*/
 	__host__ __device__
 	int heuristicEval(){
-		return p0_hval - p1_hval;
+		if(!isOver)
+			return p0_hval - p1_hval;
+		else
+			if(!winner)	return 500;
+			else		return -500;
 	}
 
 
