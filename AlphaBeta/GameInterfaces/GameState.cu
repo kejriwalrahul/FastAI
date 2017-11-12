@@ -85,13 +85,7 @@ public:
 	__host__ __device__
 	virtual void printState() = 0;
 	
-	/*
-		Functions specific to SSS*
-		Added by Srinidhi Prabhu, CS14B028
-	*/
-	__host__ __device__
-	virtual bool isLastChild() = 0;
-
+	
 	__host__ __device__
 	virtual int piece(int) = 0;
 

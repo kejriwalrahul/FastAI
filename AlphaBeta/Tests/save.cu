@@ -317,7 +317,7 @@ int GPUIterativeAlphaBeta(GameState* state, int init_val, int *order){
 		}
 	}
 
-	reorder(order, scores, iM, len);
+	// reorder(order, scores, iM, len);
 	return fin_val;
 }
 
@@ -340,7 +340,6 @@ __global__ void kernel(GameState **garr, int alpha, int beta, int depth, int isM
 	for(int k=0;k<g->moves_length; k++)	order[k] = k;
 
 	for(int d=2; d<=depth; d++){
-		// printf("%d\n",d);
 		GameState *state = new gameTypeState(*(gameTypeState*)g);
 		state->stateReset(alpha, beta, d, isMax);
 		*res = GPUIterativeAlphaBeta(state, (isMax?INT_MIN:INT_MAX), order);	
@@ -438,7 +437,7 @@ int back_up(GameState *g, int goto_depth, int &best_move){
 */
 template<class gameTypeState>
 int cpu_alphabeta_starter(gameTypeState *g, int depth, int isMax, int time){
-	int goto_depth = 2;
+	int goto_depth = 3;
 	vector<GameState*> children;
 
 	/*
@@ -481,8 +480,7 @@ int cpu_alphabeta_starter(gameTypeState *g, int depth, int isMax, int time){
 		Phase 3: Backup result
 	*/
 	int best_move;
-	// if(time>0){
-	if(false){
+	if(time>0){
 		// printf("hello\n");
 		while(*once_done < num_leaves){
 			cudaError_t err = cudaGetLastError();  
@@ -514,13 +512,12 @@ int cpu_alphabeta_starter(gameTypeState *g, int depth, int isMax, int time){
 		/*
 			Check fin_res
 		*/
-
-				
+		
 		for(int i=0; i<num_leaves; i++){
 			// printf("Thread %d: %d %d %d %d %d %d %d %d %d\n", i, children[i]->piece(0), children[i]->piece(1), children[i]->piece(2), children[i]->piece(3), children[i]->piece(4), children[i]->piece(5), children[i]->piece(6), children[i]->piece(7), children[i]->piece(8));
 
-			int temp_res = recursiveAlphaBeta(children[i], INT_MIN, INT_MAX, depth-goto_depth, ((goto_depth%2)?!isMax:isMax));
-			// printf("Thread %d: %d %d\n",i, fin_res[i], temp_res);
+			int temp_res = recursiveAlphaBeta(children[i], INT_MIN, INT_MAX, depth-goto_depth, isMax);
+			printf("Thread %d: %d %d\n",i, fin_res[i], temp_res);
 		}
 		
 	

@@ -79,6 +79,19 @@ public:
 	}	
 
 
+	__host__ __device__
+	Connect4State(Connect4State &other){
+		turn   = other.turn;
+		isOver = other.isOver;
+		winner = other.winner;
+		p0_hval = other.p0_hval;
+		p1_hval = other.p1_hval;
+		moves_length = other.moves_length;
+		memcpy(occupied, other.occupied, BOARD_SIZE * sizeof(bool));
+		memcpy(owner, other.owner, BOARD_SIZE * sizeof(bool));
+	}	
+
+
 	/*
 		Creates an array of possible moves in moves
 	*/
@@ -150,16 +163,16 @@ public:
 		// Update heuristic values
 		if(this->turn == false){
 			#ifdef  __CUDA_ARCH__
-			p0_hval += GPU_evaluationTable[row][loc];
+			new_state->p0_hval += GPU_evaluationTable[row][loc];
 			#else
-			p0_hval += CPU_evaluationTable[row][loc];
+			new_state->p0_hval += CPU_evaluationTable[row][loc];
 			#endif			
 		}
 		else{
 			#ifdef  __CUDA_ARCH__
-			p1_hval += GPU_evaluationTable[row][loc];
+			new_state->p1_hval += GPU_evaluationTable[row][loc];
 			#else
-			p1_hval += CPU_evaluationTable[row][loc];
+			new_state->p1_hval += CPU_evaluationTable[row][loc];
 			#endif			
 		}
 
@@ -257,4 +270,11 @@ public:
 		}
 	}
 
+	/*
+		Returns board piece
+	*/
+		__host__ __device__
+	int piece(int i){
+		return (occupied[i]?((owner[i])?1:-1):0);
+	}
 };

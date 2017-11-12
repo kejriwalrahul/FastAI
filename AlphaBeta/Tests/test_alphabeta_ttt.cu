@@ -36,7 +36,8 @@ int main(){
 	cudaMemcpy(&ans, res, sizeof(int), cudaMemcpyDeviceToHost);
 	*/
 
-	cout << "Minimax value (CPU): " << recursiveAlphaBeta(g, INT_MIN, INT_MAX, 9, !(g->turn)) << endl;
-	cout << "Best Move (GPU): " << cpu_alphabeta_starter(g, 9, !(g->turn), -1) << endl;
+	cout << "Minimax value (CPU): " << recursiveAlphaBeta(g, INT_MIN, INT_MAX, 8, !(g->turn)) << endl;
+	// cout << "Best Move (GPU): " << cpu_alphabeta_starter(g, 9, !(g->turn), -1) << endl;
+	cout << "Best Move (GPU): " << cpu_alphabeta_starter(g, 9, !(g->turn), 60) << endl;
 	return 0;
 }
