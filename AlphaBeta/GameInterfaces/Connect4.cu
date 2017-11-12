@@ -255,7 +255,8 @@ public:
 		if(!isOver)
 			return p0_hval - p1_hval;
 		else
-			return -500*winner;
+			if(!winner)	return 500;
+			else		return -500;
 	}
 
 
