@@ -76,7 +76,7 @@ class TicTacToeState : public GameState {
 		Store pointer to parent GameState
 	*/
 	TicTacToeState *parent_node;
-
+	
 	/*
 		Player heuristics
 	*/
@@ -84,7 +84,7 @@ class TicTacToeState : public GameState {
 	int p1_hval;
 
 public:
-
+	TicTacToeState *parent_node;
 	/*	
 		Initialize game state
 	*/
@@ -95,6 +95,7 @@ public:
 		turn = false;
 		p0_hval = p1_hval = 0;
 		optimal_move = 0;
+		parent_node = NULL;
 	}
 
 
@@ -126,6 +127,17 @@ public:
 		moves = new bool[BOARD_SIZE];
 		for(int i=0; i<BOARD_SIZE; i++)
 			moves[i] = !occupied[i];
+	}
+	
+	 __host__ __device__		
+	void moveGen(int *num_moves){
+		*num_moves = 0;
+		moves_length = BOARD_SIZE;
+		moves = new bool[BOARD_SIZE];
+		for(int i=0; i<BOARD_SIZE; i++){
+			moves[i] = !occupied[i];
+			*num_moves += moves[i];
+		}
 	}
 
 
@@ -245,24 +257,6 @@ public:
 		}
 	}
 	
-	/*
-		isLastChild for SSS*
-	*/	
-	__host__ __device__
-	bool isLastChild(){
-		int last_empty = BOARD_SIZE;
-		for(int i=BOARD_SIZE-1;i>=0;i--){
-			if((parent_node)->occupied[i]==0){
-				last_empty = i;
-				break;
-			}
-		}
-		if(last_empty == child_num){
-			return true;
-		}
-		return false;
-	}
-
 
 	/*
 		Returns board piece
@@ -270,5 +264,10 @@ public:
 		__host__ __device__
 	int piece(int i){
 		return (occupied[i]?((owner[i])?1:-1):0);
+	
+	
+	__host__ __device__
+	bool getTurn(){
+		return turn;
 	}
 };
