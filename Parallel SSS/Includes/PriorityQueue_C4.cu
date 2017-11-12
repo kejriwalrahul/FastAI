@@ -1,5 +1,5 @@
-#define NUM_PER_NODE 100
-#define NUM_TO_SEND 96
+#define NUM_PER_NODE 64
+#define NUM_TO_SEND 32
 #define QSIZE 1000
 #define NUM_BITS 10
 #ifndef _KERNELS_H_

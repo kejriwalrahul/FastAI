@@ -12,7 +12,8 @@ The optimizations have been done only for the Tic Tac Toe example. It can be ext
 		b) With streams optimization: About 7-8 seconds
 		c) With streams and reducing thread divergence: About 6-7 seconds
 		d) Without streams but with reduced thread divergence: About 8 seconds
-		
+
+For connect4, having a multiple of 32(warp size) of threads gave better performance	
 Description of files:
 	
 	GameInterfaces/
