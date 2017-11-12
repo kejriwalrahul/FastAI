@@ -1,4 +1,3 @@
-#define MAX_DEPTH 3
 __global__ void insert(PriorityQueue *pq, InsertTable *table,int* offsets, int size){
 	int index = threadIdx.x +blockIdx.x*blockDim.x;
 	
@@ -23,13 +22,23 @@ __global__ void insert(PriorityQueue *pq, InsertTable *table,int* offsets, int s
 			}
 			for(int i=0;i<tot_size;i++){
 				for(int j=i+1;j<tot_size;j++){
-					if(arr[i].key <= arr[j].key){
+					if(arr[i].key < arr[j].key){
 						tmp = arr[i];
 						arr[i] = arr[j];
 						arr[j] = tmp;
 					}
 				}
 			}
+			/*int j;
+			for(int i=0;i<tot_size;i++){
+				tmp = arr[i];
+				j = i-1;
+				while(j>=0&&arr[j].key > tmp.key){
+					arr[j] = arr[j+1];
+					j--;
+				}
+				arr[j+1] = tmp;
+			}*/
 			for(int i=0;i<NUM_PER_NODE&&i<tot_size;i++){
 				pq->nodes[node_num].nodes[i] = arr[i];
 			}
@@ -87,6 +96,7 @@ __global__ void delete_update(PriorityQueue *pq, DeleteTable *table, int* offset
 				table->status[offset] = 0;
 				done = 1;
 			}
+			//printf("Done: %d\n",done);
 			if(done != 1){
 				for(int i=0;i<tot_size;i++){
 					for(int j=i+1;j<tot_size;j++){
@@ -120,32 +130,30 @@ __global__ void delete_update(PriorityQueue *pq, DeleteTable *table, int* offset
 }
 
 __global__ void createRootNode(Node *d_to_insert, int *moves, int size){
-	Connect4State *c4s = new Connect4State();
+	TicTacToeState *ttts = new TicTacToeState();
 	for(int i=0;i<size;i++){
-		c4s = c4s->makeMove(moves[i]);
+		ttts = ttts->makeMove(moves[i]);
 	}
-	Node root((INT_MAX-1)/2,c4s);
+	Node root((INT_MAX-1)/2,ttts);
 	root.val->setRoot(true);
-	root.val->setDepth(0);
 	d_to_insert[0] = root;
 }
+
 
 __global__ void sss_star_algo(Node *d_to_send,int num_to_send,Node *d_to_insert, int *num_inserts, bool *isEnd, int *bestMove, bool player){
 	int index = threadIdx.x +blockIdx.x*blockDim.x;
 	int location;
 	if(index < num_to_send){
 		Node node = d_to_send[index];
-		Connect4State *state;
+		TicTacToeState *state;
 		state = node.val;
-		//state->printState();
-		//printf("%d\n",state->heuristicEval(player));
-		if(state->getDepth() == 0 && state->getSolved()){
+		if(state->getRoot() && state->getSolved()){
 			*isEnd = true;
 			*bestMove = state->bestMove;
 		}		
-		 else if(!state->getSolved()){
-			if(!state->getOver()&&state->getDepth()<MAX_DEPTH){
-				if((state->getTurn() == player)){
+		else if(!state->getSolved()){
+			if(!state->getOver()){
+				/*if((state->getTurn() == player)){
 					// MAX node
 					int num_moves = 0;
 					state->moveGen(&num_moves);
@@ -182,7 +190,26 @@ __global__ void sss_star_algo(Node *d_to_send,int num_to_send,Node *d_to_insert,
 							}
 						}
 					}
-				}
+				}*/
+					int num_moves = 0;
+					state->moveGen(&num_moves);
+					
+					int moves_done = 0;
+					for(int i=0;i<BOARD_SIZE;i++){
+						if(state->moves[i]==1){
+							location = atomicAdd(num_inserts,1);
+							if(node.key > 100){
+								node.key--;
+							}
+							Node tmp_node(node.key,state->makeMove(i));
+							tmp_node.val->setRoot(false);
+							d_to_insert[location] = tmp_node;
+							moves_done++;
+							if((state->getTurn() != player)){
+								break;
+							}
+						}
+					}
 			}
 			else{
 				int num_moves = 1;
@@ -194,11 +221,11 @@ __global__ void sss_star_algo(Node *d_to_send,int num_to_send,Node *d_to_insert,
 			}
 		}
 		else{
-			if((state->getTurn()==player)){
+			/*if((state->getTurn()==player)){
 				if(node.val->isLastChild()){
 					int num_moves = 1;
 					location = atomicAdd(num_inserts,num_moves);
-					Connect4State *parent;
+					TicTacToeState *parent;
 					parent = node.val->parent_node;
 					parent->setSolved(true);
 					Node tmp_node(node.key,parent);
@@ -207,7 +234,7 @@ __global__ void sss_star_algo(Node *d_to_send,int num_to_send,Node *d_to_insert,
 				else{
 					int num_moves = 1;
 					location = atomicAdd(num_inserts,num_moves);
-					Connect4State *parent,*next_child;
+					TicTacToeState *parent,*next_child;
 					parent = node.val->parent_node;
 					int move = node.val->getNextChild();
 					next_child = parent->makeMove(move);
@@ -219,14 +246,28 @@ __global__ void sss_star_algo(Node *d_to_send,int num_to_send,Node *d_to_insert,
 			else{
 					int num_moves = 1;
 					location = atomicAdd(num_inserts,num_moves);
-					Connect4State *parent;
+					TicTacToeState *parent;
 					parent = node.val->parent_node;
 					parent->setSolved(true);
 					Node tmp_node(node.key,parent);
 					d_to_insert[location] = tmp_node;
 					parent->bestMove = node.val->child_num;
 					
+			}*/
+			int num_moves = 1;
+			TicTacToeState *parent,*next_child;
+			location = atomicAdd(num_inserts,num_moves);
+			parent = node.val->parent_node;
+			parent->setSolved(true);
+			if(state->getTurn()==player && !node.val->isLastChild()){
+				int move = node.val->getNextChild();
+				next_child = parent->makeMove(move);
+				next_child->setSolved(false);
+				parent = next_child;
 			}
+			Node tmp_node(node.key,parent);
+			d_to_insert[location] = tmp_node;
+			parent->bestMove = node.val->child_num;
 			
 		}
 	}

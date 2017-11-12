@@ -22,13 +22,23 @@ __global__ void insert(PriorityQueue *pq, InsertTable *table,int* offsets, int s
 			}
 			for(int i=0;i<tot_size;i++){
 				for(int j=i+1;j<tot_size;j++){
-					if(arr[i].key <= arr[j].key){
+					if(arr[i].key < arr[j].key){
 						tmp = arr[i];
 						arr[i] = arr[j];
 						arr[j] = tmp;
 					}
 				}
 			}
+			/*int j;
+			for(int i=0;i<tot_size;i++){
+				tmp = arr[i];
+				j = i-1;
+				while(j>=0&&arr[j].key > tmp.key){
+					arr[j] = arr[j+1];
+					j--;
+				}
+				arr[j+1] = tmp;
+			}*/
 			for(int i=0;i<NUM_PER_NODE&&i<tot_size;i++){
 				pq->nodes[node_num].nodes[i] = arr[i];
 			}
